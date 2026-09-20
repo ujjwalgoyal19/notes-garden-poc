@@ -69,5 +69,5 @@ PR 0: Repo has no remote. Default branch is `main`, created empty; PR 0's commit
 PR 0: `.env.example` is tracked; `.env`, `dist`, `node_modules` are ignored (verified with `git check-ignore`).
 PR 0a: TypeScript 7 (native `tsc`). `node --test` runs `.ts` tests with no flags on Node 26 (verified with a probe), so PR 1 needs only `"test": "node --test"`; older Node needs type stripping.
 PR 0a: `Note` in `src/types.ts` is today's shape; PR 2 replaces it. Not verified in a browser (extension was not connected): only typecheck and build were run.
-PR 1: `tsconfig.json` excludes `src/**/*.test.ts` because `@types/node` is not installed (no new dependency without asking), so tests are not typechecked. Add `@types/node` and remove the exclude if you want them checked.
+PR 1: Added `@types/node` (human approved) and `"node"` in tsconfig `types`, so test files are typechecked by `tsc` and the editor.
 PR 1: `hash32`/`mulberry32` in `src/domain/prng.ts`, `tierOf`/`Tier` in `src/domain/rules.ts`. Import with the `.ts` extension. Not checked in a browser (only typecheck, build, 3 tests); `App.tsx` change is a straight swap to `tierOf`.
