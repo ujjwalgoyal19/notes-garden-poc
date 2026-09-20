@@ -1,0 +1,17 @@
+* { box-sizing: border-box; }
+body { margin: 0; overflow: hidden; font-family: system-ui, sans-serif; }
+.garden { position: fixed; inset: 0; background: linear-gradient(#dff3e4, #b9dcae 60%, #8a6a4a); cursor: cell; }
+svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.root { fill: none; stroke: #6b4a2b; stroke-linecap: round; animation: grow 1.4s ease-out; stroke-dasharray: 2000; stroke-dashoffset: 0; }
+@keyframes grow { from { stroke-dashoffset: 2000; } }
+.plant { position: absolute; transform: translate(-50%, -100%); text-align: center; line-height: 1; cursor: default; }
+.label { display: block; font-size: 11px; color: #2c4a2c; margin-top: 2px; white-space: nowrap; }
+.watering::after { content: '💧'; position: absolute; left: 50%; top: -0.4em; font-size: 16px; animation: drip 1s ease-in infinite; }
+.watering { animation: sway 1s ease-in-out infinite; }
+@keyframes drip { from { transform: translate(-50%, -14px); opacity: 0; } 50% { opacity: 1; } to { transform: translate(-50%, 8px); opacity: 0; } }
+@keyframes sway { 50% { transform: translate(-50%, -100%) rotate(4deg); } }
+.popup { position: absolute; width: 280px; background: #fffdf7; padding: 10px; border-radius: 10px; box-shadow: 0 6px 24px #0004; display: flex; flex-direction: column; gap: 8px; cursor: auto; }
+.popup textarea { height: 110px; resize: none; border: 1px solid #ccc; border-radius: 6px; padding: 8px; font: inherit; }
+.popup button { align-self: flex-end; border: 0; background: #3f7d4e; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+.hint { position: fixed; bottom: 12px; left: 16px; color: #fff; text-shadow: 0 1px 3px #0006; font-size: 13px; pointer-events: none; }
+.error { position: fixed; top: 12px; right: 12px; max-width: 360px; background: #b3261e; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
