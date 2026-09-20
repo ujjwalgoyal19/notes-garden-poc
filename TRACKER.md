@@ -2,7 +2,7 @@
 
 Single source of truth for progress. Read this first in every session. Scope for each PR is in `PLAN.md` (section 4).
 
-**Next up: PR 1** (PRNG and tier rule). Written in TypeScript; start it only after 0a merges.
+**Next up: PR 2** (Schema v2 and migration). Written in TypeScript.
 
 Status values: `todo` | `doing` | `review` (PR open, waiting on the human) | `merged` | `skipped`
 
@@ -23,8 +23,8 @@ Status values: `todo` | `doing` | `review` (PR open, waiting on the human) | `me
 | # | Title | Status | Branch / PR link | Notes |
 |---|---|---|---|---|
 | 0 | Baseline repo | review | `pr-00-baseline-repo` (local, no remote) | |
-| 0a | TypeScript setup | review | `pr-0a-typescript-setup`, https://github.com/ujjwalgoyal19/notes-garden-poc/pull/2 | Must merge before PR 1. |
-| 1 | PRNG and tier rule | todo | | A first attempt in plain JS exists uncommitted on branch `pr-01-prng-tier` (`src/domain/prng.js`, `rules.js`, `domain.test.js`, plus small edits to `package.json` and `App.jsx`). Redo it as `.ts` after 0a merges; the logic can be reused. The attempt is now in `git stash` ("PR1 plain-JS attempt"); recover with `git stash show -p --include-untracked`. |
+| 0a | TypeScript setup | merged | `pr-0a-typescript-setup`, https://github.com/ujjwalgoyal19/notes-garden-poc/pull/2 | |
+| 1 | PRNG and tier rule | review | `pr-01-prng-tier` (local, PR not opened) | The old plain-JS attempt is still in `git stash`; it is superseded, drop it. |
 | 2 | Schema v2 and migration | todo | | |
 | 3 | Graph helpers | todo | | |
 | 4 | Jev resilience | todo | | |
@@ -69,3 +69,5 @@ PR 0: Repo has no remote. Default branch is `main`, created empty; PR 0's commit
 PR 0: `.env.example` is tracked; `.env`, `dist`, `node_modules` are ignored (verified with `git check-ignore`).
 PR 0a: TypeScript 7 (native `tsc`). `node --test` runs `.ts` tests with no flags on Node 26 (verified with a probe), so PR 1 needs only `"test": "node --test"`; older Node needs type stripping.
 PR 0a: `Note` in `src/types.ts` is today's shape; PR 2 replaces it. Not verified in a browser (extension was not connected): only typecheck and build were run.
+PR 1: `tsconfig.json` excludes `src/**/*.test.ts` because `@types/node` is not installed (no new dependency without asking), so tests are not typechecked. Add `@types/node` and remove the exclude if you want them checked.
+PR 1: `hash32`/`mulberry32` in `src/domain/prng.ts`, `tierOf`/`Tier` in `src/domain/rules.ts`. Import with the `.ts` extension. Not checked in a browser (only typecheck, build, 3 tests); `App.tsx` change is a straight swap to `tierOf`.

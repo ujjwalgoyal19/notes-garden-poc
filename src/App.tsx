@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { load, save } from './storage.ts'
 import { judge } from './jev.ts'
+import { tierOf } from './domain/rules.ts'
 import type { Note, Species } from './types.ts'
 
 const EMOJI: Record<Species, string> = { flower: '🌷', fern: '🌿', cactus: '🌵', mushroom: '🍄' }
 // Size comes from note length; species (from Jev) only shows on mid-size plants.
 const plant = (n: Note) => {
-  const len = n.text.length
-  if (len < 60) return { icon: '🌱', size: 28 }
-  if (len < 240) return { icon: EMOJI[n.kind] ?? '🌷', size: 44 }
+  const tier = tierOf(n.text)
+  if (tier === 'sprout') return { icon: '🌱', size: 28 }
+  if (tier === 'mid') return { icon: EMOJI[n.kind] ?? '🌷', size: 44 }
   return { icon: '🌳', size: 72 }
 }
 
