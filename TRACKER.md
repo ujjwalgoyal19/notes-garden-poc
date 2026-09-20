@@ -23,7 +23,7 @@ Status values: `todo` | `doing` | `review` (PR open, waiting on the human) | `me
 | # | Title | Status | Branch / PR link | Notes |
 |---|---|---|---|---|
 | 0 | Baseline repo | review | `pr-00-baseline-repo` (local, no remote) | |
-| 0a | TypeScript setup | review | `pr-0a-typescript-setup` (local) | Must merge before PR 1. |
+| 0a | TypeScript setup | review | `pr-0a-typescript-setup`, https://github.com/ujjwalgoyal19/notes-garden-poc/pull/2 | Must merge before PR 1. |
 | 1 | PRNG and tier rule | todo | | A first attempt in plain JS exists uncommitted on branch `pr-01-prng-tier` (`src/domain/prng.js`, `rules.js`, `domain.test.js`, plus small edits to `package.json` and `App.jsx`). Redo it as `.ts` after 0a merges; the logic can be reused. The attempt is now in `git stash` ("PR1 plain-JS attempt"); recover with `git stash show -p --include-untracked`. |
 | 2 | Schema v2 and migration | todo | | |
 | 3 | Graph helpers | todo | | |
