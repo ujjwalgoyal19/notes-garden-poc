@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { load, save } from './storage.js'
-import { judge } from './jev.js'
+import { load, save } from './storage.ts'
+import { judge } from './jev.ts'
+import type { Note, Species } from './types.ts'
 
-const EMOJI = { flower: '🌷', fern: '🌿', cactus: '🌵', mushroom: '🍄' }
+const EMOJI: Record<Species, string> = { flower: '🌷', fern: '🌿', cactus: '🌵', mushroom: '🍄' }
 // Size comes from note length; species (from Jev) only shows on mid-size plants.
-const plant = (n) => {
+const plant = (n: Note) => {
   const len = n.text.length
   if (len < 60) return { icon: '🌱', size: 28 }
   if (len < 240) return { icon: EMOJI[n.kind] ?? '🌷', size: 44 }
@@ -12,26 +13,27 @@ const plant = (n) => {
 }
 
 export default function App() {
-  const [notes, setNotes] = useState(load)
-  const [draft, setDraft] = useState(null) // { x, y, text }
-  const [watering, setWatering] = useState(() => new Set())
+  const [notes, setNotes] = useState<Note[]>(load)
+  const [draft, setDraft] = useState<{ x: number; y: number; text: string } | null>(null)
+  const [watering, setWatering] = useState<Set<string>>(() => new Set())
   const [error, setError] = useState('')
   const notesRef = useRef(notes)
   notesRef.current = notes
 
   useEffect(() => save(notes), [notes])
   useEffect(() => {
-    const esc = (e) => e.key === 'Escape' && setDraft(null)
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setDraft(null)
     addEventListener('keydown', esc)
     return () => removeEventListener('keydown', esc)
   }, [])
 
-  const update = (id, patch) => setNotes((ns) => ns.map((n) => (n.id === id ? { ...n, ...patch } : n)))
+  const update = (id: string, patch: Partial<Note>) => setNotes((ns) => ns.map((n) => (n.id === id ? { ...n, ...patch } : n)))
 
   async function plantNote() {
+    if (!draft) return
     const text = draft.text.trim()
     if (!text) return setDraft(null)
-    const note = { id: 'n' + Date.now().toString(36), text, x: draft.x, y: draft.y, kind: 'flower', roots: [] }
+    const note: Note = { id: 'n' + Date.now().toString(36), text, x: draft.x, y: draft.y, kind: 'flower', roots: [] }
     const others = notesRef.current
     setNotes([...others, note])
     setDraft(null)
@@ -40,7 +42,7 @@ export default function App() {
     try {
       update(note.id, await judge(note, others))
     } catch (e) {
-      setError(e.message)
+      setError(e instanceof Error ? e.message : String(e))
     } finally {
       setWatering((w) => (w.delete(note.id), new Set(w)))
     }

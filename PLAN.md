@@ -1,7 +1,7 @@
 # Notes Garden: 2D upgrade plan
 
 Status: draft for review (2026-09-20). Nothing here is built yet.
-Decisions already made: 2D, PixiJS v8 for drawing (Three.js is not used, see section 1a), top-down oblique view, Obsidian-style pan/zoom with zoom-based detail,
+Decisions already made: TypeScript (strict), set up first in PR 0a, 2D, PixiJS v8 for drawing (Three.js is not used, see section 1a), top-down oblique view, Obsidian-style pan/zoom with zoom-based detail,
 roots always visible (faint, stronger = thicker/brighter), positions fixed where planted, seeded variety only,
 Jev fallback then silent rejudge, audio and `genVersion` policy deferred.
 
@@ -9,7 +9,7 @@ Jev fallback then silent rejudge, audio and `genVersion` policy deferred.
 
 | Area | Fact | Consequence |
 |---|---|---|
-| Stack | Vite 7, React 19, plain JS, no tests, ~200 lines in `src/`. Not a git repo. | Stay JS. Add tests only for pure modules, using built-in `node --test` (no new dependency). |
+| Stack | Vite 7, React 19, plain JS, no tests, ~200 lines in `src/`. Was not a git repo (PR 0 fixed that). | Convert to TypeScript first (PR 0a). Add tests only for pure modules, using built-in `node --test` (no new dependency). |
 | Note shape | `{ id, text, x, y, kind, roots: [{ to, w }] }` (`App.jsx:34`). | Needs a seed, timestamps, and a `kindSource`. |
 | Positions | `x`, `y` are **screen pixels** (`clientX/Y`, `App.jsx:52`). | Become world coordinates. Old notes are read 1:1 as world coords. |
 | IDs | `'n' + Date.now().toString(36)` | `createdAt` can be recovered from old ids. `seed` = hash of id. |
@@ -27,6 +27,7 @@ Jev fallback then silent rejudge, audio and `genVersion` policy deferred.
 | **React 19** (already installed) | ^19 | **The UI around the canvas only:** planting popup, note dialog, accessible note list, hint and error banners. It does not render plants. | already in use |
 | **Vite 7** (already installed) | ^7 | Dev server, build, and the Jev dev proxy. Unchanged. | already in use |
 | **d3-zoom** (ISC) | 3.0.0 | Pan, zoom and pinch on the canvas. Small and stable. Optional, see Q5. | PR 8 |
+| **TypeScript** (`typescript`, `@types/react`, `@types/react-dom`, dev only) | latest at PR 0a time | **Catches shape mistakes before runtime.** The note schema, migration, seeded RNG, generator command lists and the planting timeline all pass data between modules written in separate sessions; types keep them consistent. Vite only strips types, so `npm run typecheck` (`tsc --noEmit`) does the checking. PixiJS ships its own types. | PR 0a |
 | **`node --test`** | built into Node | Unit tests for the pure modules (seeded randomness, rules, graph, timeline). No dependency. | PR 1 |
 | **Jev via OpenRouter** (already in use) | n/a | Decides species and which notes connect. Unchanged. | already in use |
 | **Three.js: not used** | n/a | It was in the earlier 3D research. You chose 2D, so it is dropped, and so are React Three Fiber and drei. | never |
@@ -40,12 +41,15 @@ Where Pixi ends and everything else starts:
 
 ```
 src/
-  domain/   prng.js  rules.js  notes.js  graph.js  timeline.js     (pure, no DOM, no pixi; unit-tested)
-  gen/      forms/*.js  paint.js  bake.js                            (forms are pure: seed -> drawing commands)
-  scene/    garden.js  camera.js  plants.js  roots.js  lod.js  fx.js  ground.js
-  ui/       App.jsx  GardenCanvas.jsx  NoteDialog.jsx  NoteList.jsx
-  jev.js  rejudge.js  storage.js
+  types.ts  (Note, Root, Species, Tier)
+  domain/   prng.ts  rules.ts  notes.ts  graph.ts  timeline.ts     (pure, no DOM, no pixi; unit-tested)
+  gen/      forms/*.ts  paint.ts  bake.ts                            (forms are pure: seed -> drawing commands)
+  scene/    garden.ts  camera.ts  plants.ts  roots.ts  lod.ts  fx.ts  ground.ts
+  ui/       App.tsx  GardenCanvas.tsx  NoteDialog.tsx  NoteList.tsx
+  jev.ts  rejudge.ts  storage.ts
 ```
+
+Note: the rest of this plan was written with `.js`/`.jsx` names. After PR 0a, read them as `.ts`/`.tsx`.
 
 Rules of the architecture:
 1. `domain/` and `gen/forms/` import nothing from Pixi or React. That is what makes determinism testable.
@@ -55,7 +59,8 @@ Rules of the architecture:
 
 ### Note schema v2
 
-```js
+```ts
+// becomes `type Note = {...}` in src/types.ts
 { v: 2, id, text, x, y,            // world coords
   seed,                            // uint32, set once at creation, never recomputed
   createdAt,                       // ms; parsed from id for old notes
@@ -72,7 +77,7 @@ Derived, never stored: tier, size, variant, density bucket, maturity, glow, root
 
 - One concern per PR. Target **<= ~300 changed lines** excluding lockfile. If it is bigger, split it.
 - The app builds and runs after every merge. No half-wired features on the default path.
-- `npm run build` and `npm test` pass. Visual PRs include a screenshot or short clip. Scene PRs include an FPS number at `?demo=500`.
+- `npm run typecheck`, `npm run build` and `npm test` pass (typecheck from PR 0a on). Visual PRs include a screenshot or short clip. Scene PRs include an FPS number at `?demo=500`.
 - No drive-by refactors. Each PR description states: what, why, how to verify, how to roll back.
 - The old view stays the default until PR 12, and is deleted in PR 12.
 
@@ -85,6 +90,7 @@ Size key: **S** under ~150 lines, **M** ~150-300.
 | # | PR | Scope | Verify | Size |
 |---|---|---|---|---|
 | 0 | Baseline repo | `git init`, first commit of the current POC, confirm `.env` and `dist` stay ignored. Skip if you already track it somewhere. | `git status` clean, `.env` not tracked. | S |
+| 0a | TypeScript setup | Add dev deps `typescript`, `@types/react`, `@types/react-dom`. `tsconfig.json`: `strict`, `noEmit`, `jsx: react-jsx`, bundler module resolution, `vite/client` types. Scripts: `typecheck` (`tsc --noEmit`). Convert the four source files (`main.jsx`, `App.jsx`, `jev.js`, `storage.js`) to `.tsx`/`.ts` and update `index.html`. Add `src/types.ts` with `Note`, `Root`, `Species` matching **today's** shape (schema v2 comes in PR 2). Type `import.meta.env` (`VITE_MOCK`, `VITE_JEV_MODEL`). Confirm `node --test` picks up `.ts` tests (Node type stripping); if not, point the `test` script at `src/**/*.test.ts`. **No behaviour change.** | `npm run typecheck`, `npm run build` pass with zero `any` added. App behaves the same: plant, mock judge, roots, reload persists. | M |
 
 ### M1 Foundations (no visual change)
 
@@ -156,7 +162,7 @@ Size key: **S** under ~150 lines, **M** ~150-300.
 ## 5. Order, dependencies, milestones
 
 ```
-M1 (1..6) -> M2 (7..12) -> M4 (19..22) -> M5 (23..25) -> M7 (28..31)
+M0 (0, 0a) -> M1 (1..6) -> M2 (7..12) -> M4 (19..22) -> M5 (23..25) -> M7 (28..31)
                  \-> M3 (13..18) ---/           M6 (26,27) can slot in anywhere after 12
 ```
 
@@ -183,3 +189,4 @@ M1 (1..6) -> M2 (7..12) -> M4 (19..22) -> M5 (23..25) -> M7 (28..31)
 5. Pan and zoom: `d3-zoom` (a small stable dependency that handles pinch correctly) or hand-rolled? **d3-zoom.**
 6. Cut M6 (ground polish, time of day, fireflies) if time is short? **Yes, it is safe to cut.**
 7. Do the pre-filter (section 6) right after PR 12, or leave it until you feel the cap? **Right after PR 12.**
+8. TypeScript instead of plain JS? **Answered 2026-09-21: yes.** Set up first, in PR 0a, before any PR 1 code.

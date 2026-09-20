@@ -1,6 +1,8 @@
+import type { Note, Root, Species } from './types.ts'
+
 // Asks Jev, in ONE call: which existing notes feel connected to the new one, and what plant it is.
 // Returns { kind, roots: [{ to, w }] } with w in 0..1 (0 = barely connected, 1 = certain).
-export const SPECIES = {
+export const SPECIES: Record<Species, string> = {
   flower: 'Light, personal, feelings, everyday life',
   fern: 'Learning, research, reading, calm reflection',
   cactus: 'Work, tasks, hard problems, resilience',
@@ -8,12 +10,17 @@ export const SPECIES = {
 }
 export const THRESHOLD = 0.5
 const MAX_OTHERS = 150 // ponytail: 32k context; add an embedding pre-filter past ~150 notes
-const clip = (s) => s.slice(0, 300)
+const clip = (s: string) => s.slice(0, 300)
 const MOCK = import.meta.env.VITE_MOCK === '1'
 
-export async function judge(note, others) {
-  others = others.slice(-MAX_OTHERS)
-  const questions = {
+type Answer = { choice?: string; noul?: number }
+type Answers = Record<string, Answer | undefined>
+type Questions = Record<string, { type: string; instructions: string; criteria?: Record<string, string> }>
+const isSpecies = (s: unknown): s is Species => typeof s === 'string' && s in SPECIES
+
+export async function judge(note: Note, all: Note[]): Promise<{ kind: Species; roots: Root[] }> {
+  const others = all.slice(-MAX_OTHERS)
+  const questions: Questions = {
     kind: { type: 'choice', instructions: 'Which plant suits the new note?', criteria: SPECIES },
   }
   for (const o of others) {
@@ -27,7 +34,7 @@ export async function judge(note, others) {
   const { answers } = MOCK ? mock(note, others) : await call(state, questions)
   console.log('[jev] raw answers', answers)
   return {
-    kind: answers.kind?.choice in SPECIES ? answers.kind.choice : 'flower',
+    kind: isSpecies(answers.kind?.choice) ? answers.kind.choice : 'flower',
     // w: 0 at the threshold (thin root) .. 1 at certainty (thick root)
     roots: others
       .map((o) => ({ to: o.id, p: strength(answers[o.id]) }))
@@ -37,9 +44,9 @@ export async function judge(note, others) {
 }
 
 // Verified against the real API: noul is a 0-1 probability, e.g. { type: 'noul', noul: 0.88 }.
-const strength = (a) => a?.noul ?? 0
+const strength = (a?: Answer) => a?.noul ?? 0
 
-async function call(state, questions) {
+async function call(state: unknown, questions: Questions): Promise<{ answers: Answers }> {
   const res = await fetch('/api/decisions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -50,10 +57,10 @@ async function call(state, questions) {
 }
 
 // Fake judge: word overlap. Same response shape as the real thing.
-function mock(note, others) {
-  const words = (s) => new Set(s.toLowerCase().match(/[a-z]{4,}/g) ?? [])
+function mock(note: Note, others: Note[]): { answers: Answers } {
+  const words = (s: string) => new Set(s.toLowerCase().match(/[a-z]{4,}/g) ?? [])
   const a = words(note.text)
-  const answers = { kind: { choice: Object.keys(SPECIES)[note.text.length % 4] } }
+  const answers: Answers = { kind: { choice: Object.keys(SPECIES)[note.text.length % 4] } }
   for (const o of others) {
     const b = words(o.text)
     const shared = [...a].filter((w) => b.has(w)).length

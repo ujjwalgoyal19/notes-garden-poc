@@ -9,7 +9,7 @@ Being upgraded from an SVG/emoji toy to a 2D PixiJS garden, top-down oblique. Wo
    Read only its sections 1a to 3, and that PR's row: `grep -n "^| <N> |" PLAN.md`.
 2. Create branch `pr-<NN>-<slug>` (git may not exist until PR 0).
 3. Implement only what that row says. If it needs more than about 300 changed lines, stop and propose a split.
-4. Verify: `npm run build`, and `npm test` once it exists. Do the row's "Verify" step. For scene PRs, report FPS at `?demo=500`.
+4. Verify: `npm run typecheck` (from PR 0a), `npm run build`, and `npm test` once it exists. Do the row's "Verify" step. For scene PRs, report FPS at `?demo=500`.
 5. Update `TRACKER.md`: set status to `review`, fill the branch/PR link, advance "Next up", and append a handoff note (3 lines max).
 6. Commit, and open the PR only if the human asks. Then **stop**. Never start the next PR.
 
@@ -17,7 +17,7 @@ If the plan and the code disagree, or a decision is missing, ask. Do not silentl
 
 ## Conventions
 
-- Plain JS and JSX. No TypeScript. No new dependency without asking.
+- TypeScript, `strict`, from PR 0a on (until that PR merges the files are still JS). Avoid `any`. No new dependency without asking.
 - `src/domain/` and `src/gen/forms/` are pure: no Pixi, no React, no DOM. Unit-test them with `node --test`.
 - The scene (`src/scene/`) is imperative Pixi. React renders DOM UI only, never plants.
 - Prefer the shortest working change. Mark deliberate shortcuts with `// ponytail: <ceiling and upgrade path>`.

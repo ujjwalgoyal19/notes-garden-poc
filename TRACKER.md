@@ -2,7 +2,7 @@
 
 Single source of truth for progress. Read this first in every session. Scope for each PR is in `PLAN.md` (section 4).
 
-**Next up: PR 1** (PRNG and tier rule).
+**Next up: PR 1** (PRNG and tier rule). Written in TypeScript; start it only after 0a merges.
 
 Status values: `todo` | `doing` | `review` (PR open, waiting on the human) | `merged` | `skipped`
 
@@ -15,6 +15,7 @@ Status values: `todo` | `doing` | `review` (PR open, waiting on the human) | `me
 - D5 Pan and zoom use `d3-zoom`. Pan and zoom are in PR 8 regardless. (confirmed)
 - D6 Milestone M6 (PRs 26-27) is optional and safe to cut. (confirmed)
 - D7 Jev candidate pre-filter comes right after PR 12 (row 12a). (default, not answered)
+- D8 TypeScript (strict) instead of plain JS, set up first as PR 0a. (confirmed 2026-09-21)
 - Fixed: 2D, PixiJS v8 for drawing, no Three.js, top-down oblique, fixed layout where planted, seeded variety only, audio and `genVersion` policy deferred.
 
 ## PRs
@@ -22,7 +23,8 @@ Status values: `todo` | `doing` | `review` (PR open, waiting on the human) | `me
 | # | Title | Status | Branch / PR link | Notes |
 |---|---|---|---|---|
 | 0 | Baseline repo | review | `pr-00-baseline-repo` (local, no remote) | |
-| 1 | PRNG and tier rule | todo | | |
+| 0a | TypeScript setup | review | `pr-0a-typescript-setup`, https://github.com/ujjwalgoyal19/notes-garden-poc/pull/2 | Must merge before PR 1. |
+| 1 | PRNG and tier rule | todo | | A first attempt in plain JS exists uncommitted on branch `pr-01-prng-tier` (`src/domain/prng.js`, `rules.js`, `domain.test.js`, plus small edits to `package.json` and `App.jsx`). Redo it as `.ts` after 0a merges; the logic can be reused. The attempt is now in `git stash` ("PR1 plain-JS attempt"); recover with `git stash show -p --include-untracked`. |
 | 2 | Schema v2 and migration | todo | | |
 | 3 | Graph helpers | todo | | |
 | 4 | Jev resilience | todo | | |
@@ -65,3 +67,5 @@ Format: `PR N: <what future PRs must know>`
 
 PR 0: Repo has no remote. Default branch is `main`, created empty; PR 0's commit lives only on `pr-00-baseline-repo`, so merge it into `main` before branching PR 1.
 PR 0: `.env.example` is tracked; `.env`, `dist`, `node_modules` are ignored (verified with `git check-ignore`).
+PR 0a: TypeScript 7 (native `tsc`). `node --test` runs `.ts` tests with no flags on Node 26 (verified with a probe), so PR 1 needs only `"test": "node --test"`; older Node needs type stripping.
+PR 0a: `Note` in `src/types.ts` is today's shape; PR 2 replaces it. Not verified in a browser (extension was not connected): only typecheck and build were run.
